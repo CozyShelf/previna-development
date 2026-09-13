@@ -1,0 +1,19 @@
+services:
+  backend:
+    image: REGISTRY/previna-backend:TAG # TODO: registry da imagem gerada do backend
+    restart: unless-stopped
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod
+
+  frontend:
+    image: REGISTRY/previna-frontend:TAG # TODO: registry da imagem gerada do frontend
+    restart: unless-stopped
+
+  nginx:
+    restart: unless-stopped
+    ports:
+      - "443:443"
+    volumes:
+      - ./config/nginx/nginx.prod.conf:/etc/nginx/conf.d/default.conf:ro
+      - /etc/letsencrypt:/etc/letsencrypt:ro
+      - /var/www/certbot:/var/www/certbot:ro

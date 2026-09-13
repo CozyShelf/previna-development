@@ -1,0 +1,24 @@
+services:
+  backend:
+    environment: {} # PUT COMMON BACKEND ENV VARIABLES HERE
+    networks:
+      - previna-network
+
+  frontend:
+    environment: {} # PUT COMMON FRONTEND ENV VARIABLES HERE
+    networks:
+      - previna-network
+
+  nginx:
+    image: nginx:1.27-alpine
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+      - frontend
+    networks:
+      - previna-network
+
+networks:
+  previna-network:
+    driver: bridge
