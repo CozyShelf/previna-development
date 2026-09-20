@@ -8,7 +8,7 @@ Contém a orquestração com Docker Compose + Nginx. O código da aplicação fi
 ```bash
 code/
 ├── previna-backend/        # API Spring Boot (Java 21 + Maven)
-├── previna-frontend/       # SPA Vite (Node 20)
+├── previna-frontend/       # SPA Vite (Node 22)
 └── previna-development/    # este repositório
 ```
 

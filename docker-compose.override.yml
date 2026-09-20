@@ -8,6 +8,31 @@ services:
       - ~/.m2:/root/.m2
     environment:
       - SPRING_PROFILES_ACTIVE=dev
+      - DB_URL=jdbc:postgresql://db:5432/previna
+      - DB_USER=previna
+      - DB_PASSWORD=previna
+    depends_on:
+      db:
+        condition: service_healthy
+
+  db:
+    image: postgres:18-alpine
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=previna
+      - POSTGRES_PASSWORD=previna
+      - POSTGRES_DB=previna
+    volumes:
+      - previna-db-data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U previna -d previna"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    networks:
+      - previna-network
 
   frontend:
     build:
@@ -22,3 +47,6 @@ services:
   nginx:
     volumes:
       - ./config/nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+
+volumes:
+  previna-db-data:

@@ -1,0 +1,37 @@
+{
+  "name": "previna-development",
+  "version": "1.0.0",
+  "description": "Repositório de infraestrutura do **Previna**.   Contém a orquestração com Docker Compose + Nginx. O código da aplicação fica em repositórios separados.",
+  "main": "index.js",
+  "scripts": {
+    "start:dev": "docker compose up -d",
+    "stop:dev": "docker compose down",
+    "restart:dev": "docker compose down && docker compose up -d",
+    "restart:dev:backend": "docker compose restart backend && docker compose restart nginx",
+    "restart:dev:frontend": "docker compose restart frontend && docker compose restart nginx",
+    "logs:dev:frontend": "docker compose logs -f frontend",
+    "logs:dev:backend": "docker compose logs -f backend",
+    "logs:dev:nginx": "docker compose logs -f nginx",
+    "build:dev": "docker compose build",
+    "clean:dev": "docker compose down && docker compose build",
+    "start:prod": "docker compose -f docker-compose.prod.yml up -d",
+    "stop:prod": "docker compose -f docker-compose.prod.yml down",
+    "restart:prod": "docker compose -f docker-compose.prod.yml down && docker compose -f docker-compose.prod.yml up -d",
+    "logs:prod:frontend": "docker compose -f docker-compose.prod.yml logs -f frontend",
+    "logs:prod:backend": "docker compose -f docker-compose.prod.yml logs -f backend",
+    "logs:prod:nginx": "docker compose -f docker-compose.prod.yml logs -f nginx",
+    "build:prod": "docker compose -f docker-compose.prod.yml build"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/CozyShelf/previna-development.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/CozyShelf/previna-development/issues"
+  },
+  "homepage": "https://github.com/CozyShelf/previna-development#readme"
+}

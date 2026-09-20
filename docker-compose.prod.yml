@@ -4,6 +4,10 @@ services:
     restart: unless-stopped
     environment:
       - SPRING_PROFILES_ACTIVE=prod
+      - DB_URL=${DB_URL:?defina DB_URL no .env}
+      - DB_USER=${DB_USER:?defina DB_USER no .env}
+      - DB_PASSWORD=${DB_PASSWORD:?defina DB_PASSWORD no .env}
+      - JWT_SECRET=${JWT_SECRET:?defina JWT_SECRET no .env}
 
   frontend:
     image: REGISTRY/previna-frontend:TAG # TODO: registry da imagem gerada do frontend
