@@ -243,11 +243,12 @@ let qrLibrary;
 function loadQrLibrary() {
   qrLibrary ??= new Promise((resolve, reject) => {
     const script = Object.assign(document.createElement('script'), {
-      src: 'https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js',
+      // qrcodejs 1.0.0 servido localmente: a pagina controla o Docker, nada de script de CDN
+      src: 'vendor/qrcode.min.js',
       onload: () => resolve(window.QRCode),
       onerror: () => {
         qrLibrary = undefined;
-        reject(new Error('sem acesso ao CDN'));
+        reject(new Error('falha ao carregar o gerador de QR code'));
       },
     });
     document.head.append(script);

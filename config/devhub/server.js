@@ -188,7 +188,11 @@ function serveStatic(pathname, res) {
   if (!file.startsWith(PUBLIC_DIR)) return sendJson(res, 404, { error: 'Not found' });
   fs.readFile(file, (err, content) => {
     if (err) return sendJson(res, 404, { error: 'Not found' });
-    res.writeHead(200, { 'Content-Type': MIME[path.extname(file)] ?? 'application/octet-stream' });
+    res.writeHead(200, {
+      'Content-Type': MIME[path.extname(file)] ?? 'application/octet-stream',
+      // So scripts do proprio devhub: a pagina chama a API que controla o Docker
+      'Content-Security-Policy': "script-src 'self'; object-src 'none'; base-uri 'none'",
+    });
     res.end(content);
   });
 }
