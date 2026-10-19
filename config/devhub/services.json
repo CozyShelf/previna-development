@@ -1,0 +1,31 @@
+{
+  "frontend": {
+    "title": "Frontend web",
+    "description": "SPA Vite com hot reload, servida pelo nginx em /",
+    "links": [{ "label": "Abrir app", "url": "http://{host}/" }]
+  },
+  "backend": {
+    "title": "Backend",
+    "description": "API Spring Boot (profile dev), servida pelo nginx em /backend",
+    "links": [
+      { "label": "API", "url": "http://{host}/backend/" },
+      { "label": "Swagger", "url": "http://{host}/backend/swagger-ui/index.html" }
+    ]
+  },
+  "nginx": {
+    "title": "Nginx",
+    "description": "Reverse proxy: / → frontend, /backend → backend",
+    "links": [{ "label": "Abrir", "url": "http://{host}/" }]
+  },
+  "db": {
+    "title": "PostgreSQL",
+    "description": "Banco de dados de desenvolvimento",
+    "copy": [{ "label": "Conexão", "value": "postgresql://previna:previna@{host}:5432/previna" }]
+  },
+  "mobile": {
+    "title": "App mobile (Metro)",
+    "description": "Bundler do Expo. Abra no Expo Go do celular",
+    "links": [{ "label": "Status do Metro", "url": "http://{host}:8081/status" }],
+    "qr": { "label": "Abrir no celular", "value": "exp://{mobileHost}:8081" }
+  }
+}
