@@ -4,16 +4,25 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Previna Dev</title>
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><rect width='16' height='16' rx='4' fill='%2322c55e'/></svg>" />
+    <link rel="icon" type="image/png" href="logo.png" />
+    <!-- Mesmas fontes do previna-frontend; sem internet cai para a fonte do sistema -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&family=Raleway:wght@700&display=swap"
+      rel="stylesheet"
+    />
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
     <header class="topbar">
       <div class="brand">
-        <span class="brand-mark" aria-hidden="true"></span>
-        <div>
-          <h1>Previna <span>dev</span></h1>
-          <p id="project" class="muted">conectando ao Docker…</p>
+        <img class="brand-logo" src="logo.png" alt="" width="28" height="28" />
+        <h1><span class="brand-name">Previna</span> <span class="brand-tag">dev</span></h1>
+        <span class="brand-divider" aria-hidden="true"></span>
+        <div class="brand-context">
+          <p class="brand-title">Central de desenvolvimento</p>
+          <p id="project" class="muted small">conectando ao Docker…</p>
         </div>
       </div>
       <div class="summary">
