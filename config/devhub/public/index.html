@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Previna Dev</title>
+    <link rel="icon" type="image/png" href="logo.png" />
+    <!-- Mesmas fontes do previna-frontend; sem internet cai para a fonte do sistema -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&family=Raleway:wght@700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="brand">
+        <img class="brand-logo" src="logo.png" alt="" width="28" height="28" />
+        <h1><span class="brand-name">Previna</span> <span class="brand-tag">dev</span></h1>
+        <span class="brand-divider" aria-hidden="true"></span>
+        <div class="brand-context">
+          <p class="brand-title">Central de desenvolvimento</p>
+          <p id="project" class="muted small">conectando ao Docker…</p>
+        </div>
+      </div>
+      <div class="summary">
+        <span id="summary" class="pill">—</span>
+        <span id="updated" class="muted small"></span>
+      </div>
+    </header>
+
+    <div id="error" class="banner" hidden></div>
+
+    <main class="layout">
+      <section class="services" aria-label="Serviços">
+        <div id="services" class="grid"></div>
+      </section>
+
+      <section class="logs" aria-label="Logs">
+        <div class="logs-head">
+          <div id="log-tabs" class="tabs" role="tablist"></div>
+          <div class="logs-tools">
+            <input id="log-filter" type="search" placeholder="Filtrar…" aria-label="Filtrar logs" />
+            <label class="toggle"><input id="log-follow" type="checkbox" checked /> seguir</label>
+            <label class="toggle"><input id="log-wrap" type="checkbox" /> quebrar linhas</label>
+            <button id="log-clear" class="btn ghost" type="button">Limpar</button>
+          </div>
+        </div>
+        <div id="log-status" class="log-status muted small">Selecione um serviço para ver os logs.</div>
+        <pre id="log-output" class="log-output" tabindex="0"></pre>
+      </section>
+    </main>
+
+    <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+
+    <dialog id="qr-dialog" class="qr-dialog">
+      <form method="dialog" class="qr-close"><button class="btn ghost" aria-label="Fechar">✕</button></form>
+      <h2>Abrir no Expo Go</h2>
+      <div id="qr-code" class="qr-code"></div>
+      <div class="qr-url">
+        <code id="qr-url"></code>
+        <button id="qr-copy" class="link" type="button">Copiar ⧉</button>
+      </div>
+      <p id="qr-warning" class="qr-warning" hidden>
+        <code>MOBILE_HOST</code> não está definido, então a URL usa <code>localhost</code> e só funciona no
+        emulador (que já abre o app sozinho). Para o celular, defina o IP da máquina na LAN no
+        <code>.env</code> do previna-development e rode <code>npm run start:dev:mobile:device</code>.
+      </p>
+      <ol class="qr-steps">
+        <li>Conecte o celular na mesma rede Wi-Fi desta máquina.</li>
+        <li>Instale o <strong>Expo Go</strong> (Play Store / App Store), na versão compatível com o SDK do projeto.</li>
+        <li>Android: no Expo Go, toque em <em>Scan QR code</em>. iPhone: use a câmera do sistema.</li>
+        <li>Ou, no Expo Go, toque em <em>Enter URL manually</em> e digite a URL acima.</li>
+      </ol>
+    </dialog>
+
+    <template id="card-template">
+      <article class="card">
+        <header class="card-head">
+          <span class="dot" aria-hidden="true"></span>
+          <div class="card-title">
+            <h2></h2>
+            <code class="service-name"></code>
+          </div>
+          <span class="state pill"></span>
+        </header>
+        <p class="description muted"></p>
+        <p class="status small muted"></p>
+        <ul class="ports"></ul>
+        <div class="links"></div>
+        <footer class="actions">
+          <button class="btn" data-action="logs" type="button">Logs</button>
+          <button class="btn" data-action="restart" type="button">Reiniciar</button>
+          <button class="btn" data-action="toggle" type="button"></button>
+        </footer>
+      </article>
+    </template>
+
+    <script src="app.js"></script>
+  </body>
+</html>

@@ -9,6 +9,7 @@ Contém a orquestração com Docker Compose + Nginx. O código da aplicação fi
 code/
 ├── previna-backend/        # API Spring Boot (Java 21 + Maven)
 ├── previna-frontend/       # SPA Vite (Node 22)
+├── previna-frontend-mobile/ # App Expo / React Native (Node 22)
 └── previna-development/    # este repositório
 ```
 
@@ -52,10 +53,16 @@ previna-development/
     ├── backend/
     │   ├── Dockerfile.dev          # mvn spring-boot:run
     │   └── Dockerfile              # Multi-stage → JRE 21 alpine
-    └── frontend/
-        ├── Dockerfile.dev          # npm run dev
-        ├── Dockerfile              # Multi-stage → nginx + dist/
-        └── nginx.conf              # Config interna do container de frontend (SPA)
+    ├── frontend/
+    │   ├── Dockerfile.dev          # npm run dev
+    │   ├── Dockerfile              # Multi-stage → nginx + dist/
+    │   └── nginx.conf              # Config interna do container de frontend (SPA)
+    ├── mobile/
+    │   └── Dockerfile.dev          # npx expo start (Metro)
+    └── devhub/                     # Central de desenvolvimento (só dev)
+        ├── server.js               # Node sem dependências, fala com a API do Docker
+        ├── services.json           # Título, descrição e links de cada serviço
+        └── public/                 # Página (HTML/CSS/JS puro)
 ```
 
 ---
@@ -75,18 +82,62 @@ O arquivo `docker-compose.override.yml` é carregado automaticamente e configura
 - Cache do Maven (`~/.m2`)
 - Profile Spring `dev`
 - Nginx com suporte a WebSocket (necessário para o HMR do Vite)
+- App mobile (Metro) (ver [App mobile](#app-mobile-expo))
 
 ### Acessos
 
+- **Central de desenvolvimento → [http://localhost:9000](http://localhost:9000)**
 - Frontend → [http://localhost](http://localhost)
 - Backend  → [http://localhost/backend/](http://localhost/backend/)
+
+### Central de desenvolvimento
+
+O serviço `devhub` sobe junto com o ambiente e mostra, em [http://localhost:9000](http://localhost:9000):
+
+- Status de cada container (rodando, parado, healthcheck) e as portas publicadas
+- Links de acesso (app, API, Swagger, Metro) e dados para copiar (conexão do Postgres, URL do Expo)
+- Botões para reiniciar, parar e iniciar cada serviço
+- Logs ao vivo com filtro, cores ANSI e reconexão automática quando o container reinicia
+
+Link direto para os logs de um serviço: `http://localhost:9000/?logs=backend`.
+
+Para adicionar ou ajustar links, edite `config/devhub/services.json` (`{host}` vira o host usado no navegador).
+Serviços novos do compose aparecem automaticamente, mesmo sem entrada no arquivo.
+
+> O devhub monta o socket do Docker (`/var/run/docker.sock`), o que dá controle total sobre o Docker da máquina.
+> Por isso a porta é publicada só em `127.0.0.1` e o serviço existe apenas no `docker-compose.override.yml` (nunca em produção).
+
+### App mobile (Expo)
+
+O `npm run start:dev` (ou `docker compose up -d`) já sobe o Metro (`mobile`).
+O app roda no celular físico, pelo Expo Go, na mesma rede Wi-Fi da máquina.
+
+```bash
+npm run start:dev         # tudo, incluindo o Metro
+npm run logs:dev:mobile   # logs do Metro (QR code aparece aqui e na central)
+```
+
+1. Copie `.env.example` para `.env` e defina o IP da máquina na LAN:
+   ```bash
+   MOBILE_HOST=192.168.0.10
+   MOBILE_API_URL=http://192.168.0.10/backend
+   ```
+2. `npm run start:dev` e abra `exp://192.168.0.10:8081` no Expo Go (ou escaneie o QR code).
+
+> O Expo Go precisa suportar o SDK do projeto (ver `expo` no `package.json` do mobile).
+> Se o Expo Go da loja estiver em um SDK diferente, use um development build (`eas build --profile development`).
+
+Atalhos do Expo (ex: `r` para reload): `docker attach previna-development-mobile-1` (sair com `Ctrl+P Ctrl+Q`).
+
+> Ao mudar dependências do mobile, rebuild a imagem e renove o volume de `node_modules`:
+> `docker compose --profile mobile up -d --build --renew-anon-volumes mobile`
 
 ---
 
 ## Produção
 
 ```bash
-docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+npm start   # = docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
 ```
 
 > Ao passar o `-f`, o `docker-compose.override.yml` **não** é carregado.
@@ -97,6 +148,7 @@ O que o `docker-compose.prod.yml` faz:
 - Ativa o profile Spring `prod`
 - Define `restart: unless-stopped`
 - Usa o `nginx.prod.conf` (HTTPS, HTTP/2, gzip e headers de segurança)
+- Não inclui o app mobile: o app é distribuído pelas lojas (EAS Build) e só consome a API em `https://<domínio>/backend`
 
 ### Pré-requisitos de produção
 
