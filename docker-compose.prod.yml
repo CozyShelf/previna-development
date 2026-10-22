@@ -8,6 +8,12 @@ services:
       - DB_USER=${DB_USER:?defina DB_USER no .env}
       - DB_PASSWORD=${DB_PASSWORD:?defina DB_PASSWORD no .env}
       - JWT_SECRET=${JWT_SECRET:?defina JWT_SECRET no .env}
+      - MAIL_HOST=${MAIL_HOST:?defina MAIL_HOST no .env}
+      - MAIL_PORT=${MAIL_PORT:?defina MAIL_PORT no .env}
+      - MAIL_USER=${MAIL_USER:?defina MAIL_USER no .env}
+      - MAIL_PASSWORD=${MAIL_PASSWORD:?defina MAIL_PASSWORD no .env}
+      - MAIL_FROM=${MAIL_FROM:?defina MAIL_FROM no .env}
+      - PORTAL_URL=${PORTAL_URL:?defina PORTAL_URL no .env}
 
   frontend:
     image: REGISTRY/previna-frontend:TAG # TODO: registry da imagem gerada do frontend
