@@ -22,6 +22,15 @@
     "description": "Banco de dados de desenvolvimento",
     "copy": [{ "label": "Conexão", "value": "postgresql://previna:previna@{host}:5432/previna" }]
   },
+  "mailhog": {
+    "title": "E-mails (MailHog)",
+    "description": "SMTP de desenvolvimento: guarda os e-mails enviados pelo backend, como o pré-login das empresas parceiras",
+    "links": [
+      { "label": "Abrir MailHog", "url": "http://{host}:8025/" },
+      { "label": "API", "url": "http://{host}:8025/api/v2/messages" }
+    ],
+    "copy": [{ "label": "SMTP (rede interna)", "value": "mailhog:1025" }]
+  },
   "mobile": {
     "title": "App mobile (Metro)",
     "description": "Bundler do Expo. Abra no Expo Go do celular",

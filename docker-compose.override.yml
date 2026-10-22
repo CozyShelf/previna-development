@@ -11,6 +11,7 @@ services:
       - DB_URL=jdbc:postgresql://db:5432/previna
       - DB_USER=previna
       - DB_PASSWORD=previna
+      - MAIL_HOST=mailhog
     depends_on:
       db:
         condition: service_healthy
@@ -31,6 +32,22 @@ services:
       timeout: 5s
       retries: 10
       start_period: 30s
+    networks:
+      - previna-network
+
+  # SMTP de mentira: guarda os e-mails enviados pelo backend (ex.: pré-login das empresas parceiras)
+  mailhog:
+    image: mailhog/mailhog:v1.0.1
+    ports:
+      # Só localhost: a caixa mostra as senhas temporárias enviadas
+      - "127.0.0.1:8025:8025"
+    # Saúde aparece no devhub: interface web (8025) e SMTP (1025) respondendo
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://127.0.0.1:8025/ && nc -z 127.0.0.1 1025"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
     networks:
       - previna-network
 

@@ -89,6 +89,7 @@ O arquivo `docker-compose.override.yml` é carregado automaticamente e configura
 - **Central de desenvolvimento → [http://localhost:9000](http://localhost:9000)**
 - Frontend → [http://localhost](http://localhost)
 - Backend  → [http://localhost/backend/](http://localhost/backend/)
+- E-mails (MailHog) → [http://localhost:8025](http://localhost:8025): e-mails enviados pelo backend, como o pré-login das empresas parceiras
 
 ### Central de desenvolvimento
 
@@ -163,7 +164,12 @@ O que o `docker-compose.prod.yml` faz:
    Os arquivos precisam estar em `/etc/letsencrypt`.  
    O desafio ACME é servido a partir de `/var/www/certbot`.
 
-4. **Spring Boot atrás de proxy**  
+4. **E-mail (SMTP)**  
+   O pré-cadastro de empresa parceira envia o login e a senha temporários por e-mail.  
+   Defina no `.env`: `MAIL_HOST`, `MAIL_PORT`, `MAIL_USER`, `MAIL_PASSWORD`, `MAIL_FROM` e `PORTAL_URL` (endereço do portal que vai no e-mail).  
+   No profile `prod` o envio exige autenticação e STARTTLS.
+
+5. **Spring Boot atrás de proxy**  
    No profile `prod`, configure:
    ```yaml
    server.forward-headers-strategy=framework
