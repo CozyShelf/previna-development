@@ -24,7 +24,7 @@ Frontend e Backend ficam na rede interna `previna-network` e se comunicam pela m
 Cliente
   │
   ▼
-Nginx (porta 80/443)
+Nginx (dev: porta 80, ou NGINX_PORT; prod: 80 e 443)
   ├── /          → frontend
   └── /backend/  → backend:8080
 ```
@@ -91,6 +91,9 @@ O arquivo `docker-compose.override.yml` é carregado automaticamente e configura
 - Backend  → [http://localhost/backend/](http://localhost/backend/)
 - E-mails (MailHog) → [http://localhost:8025](http://localhost:8025): e-mails enviados pelo backend, como o pré-login das empresas parceiras
 
+> Porta 80 já em uso na máquina? Defina `NGINX_PORT` no `.env` (ex.: `8080`) e ajuste junto `PORTAL_URL` e
+> `MOBILE_API_URL`, como no `.env.example`. Os links da central de desenvolvimento acompanham a porta.
+
 ### Central de desenvolvimento
 
 O serviço `devhub` sobe junto com o ambiente e mostra, em [http://localhost:9000](http://localhost:9000):
@@ -155,6 +158,7 @@ O que o `docker-compose.prod.yml` faz:
 - Usa imagens prontas do registry (sem volumes de código)
 - Ativa o profile Spring `prod`
 - Define `restart: unless-stopped`
+- Publica as portas 80 (desafio do Let's Encrypt e redirecionamento para HTTPS) e 443
 - Usa o `nginx.prod.conf` (HTTPS, HTTP/2, gzip e headers de segurança)
 - Não inclui o app mobile: o app é distribuído pelas lojas (EAS Build) e só consome a API em `https://<domínio>/backend`
 

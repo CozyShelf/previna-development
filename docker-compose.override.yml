@@ -12,6 +12,8 @@ services:
       - DB_USER=previna
       - DB_PASSWORD=previna
       - MAIL_HOST=mailhog
+      # Link do portal no e-mail de pré-cadastro; com NGINX_PORT, inclua a porta (ex.: http://localhost:8080)
+      - PORTAL_URL=${PORTAL_URL:-http://localhost}
     depends_on:
       db:
         condition: service_healthy
@@ -86,6 +88,9 @@ services:
       - previna-network
 
   nginx:
+    # Porta do host configurável no .env (NGINX_PORT), para quem já tem a 80 ocupada na máquina
+    ports:
+      - "${NGINX_PORT:-80}:80"
     volumes:
       - ./config/nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
 
@@ -96,6 +101,8 @@ services:
     environment:
       # IP da maquina na LAN (mesmo do Metro), usado no QR code do Expo Go
       - MOBILE_HOST=${MOBILE_HOST:-}
+      # Porta do nginx no host, para os links do frontend e do backend
+      - NGINX_PORT=${NGINX_PORT:-80}
     volumes:
       - ./config/devhub:/app:ro
       - /var/run/docker.sock:/var/run/docker.sock

@@ -11,8 +11,13 @@ const DOCKER_SOCKET = process.env.DOCKER_SOCKET || '/var/run/docker.sock';
 const PUBLIC_DIR = path.join(__dirname, 'public');
 const SERVICES = JSON.parse(fs.readFileSync(path.join(__dirname, 'services.json'), 'utf8'));
 const ACTIONS = new Set(['start', 'stop', 'restart']);
-// Valores para os placeholders do services.json (alem de {host}, resolvido no navegador)
-const VARS = { mobileHost: process.env.MOBILE_HOST || null };
+// Valores para os placeholders do services.json (alem de {host}, resolvido no navegador).
+// webPort: ":8080" quando o nginx nao esta na porta 80 do host (NGINX_PORT), senao vazio
+const NGINX_PORT = process.env.NGINX_PORT || '80';
+const VARS = {
+  mobileHost: process.env.MOBILE_HOST || null,
+  webPort: NGINX_PORT === '80' ? '' : `:${NGINX_PORT}`,
+};
 
 const MIME = {
   '.html': 'text/html; charset=utf-8',

@@ -2,20 +2,20 @@
   "frontend": {
     "title": "Frontend web",
     "description": "SPA Vite com hot reload, servida pelo nginx em /",
-    "links": [{ "label": "Abrir app", "url": "http://{host}/" }]
+    "links": [{ "label": "Abrir app", "url": "http://{host}{webPort}/" }]
   },
   "backend": {
     "title": "Backend",
     "description": "API Spring Boot (profile dev), servida pelo nginx em /backend",
     "links": [
-      { "label": "API", "url": "http://{host}/backend/" },
-      { "label": "Swagger", "url": "http://{host}/backend/swagger-ui/index.html" }
+      { "label": "API", "url": "http://{host}{webPort}/backend/" },
+      { "label": "Swagger", "url": "http://{host}{webPort}/backend/swagger-ui/index.html" }
     ]
   },
   "nginx": {
     "title": "Nginx",
     "description": "Reverse proxy: / → frontend, /backend → backend",
-    "links": [{ "label": "Abrir", "url": "http://{host}/" }]
+    "links": [{ "label": "Abrir", "url": "http://{host}{webPort}/" }]
   },
   "db": {
     "title": "PostgreSQL",
