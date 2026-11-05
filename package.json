@@ -4,6 +4,7 @@
   "description": "Repositório de infraestrutura do **Previna**.   Contém a orquestração com Docker Compose + Nginx. O código da aplicação fica em repositórios separados.",
   "main": "index.js",
   "scripts": {
+    "test": "node --test",
     "start": "npm run start:prod",
     "start:dev": "docker compose up -d && printf '\\n  Central de desenvolvimento: http://localhost:9000\\n\\n'",
     "stop:dev": "docker compose down",

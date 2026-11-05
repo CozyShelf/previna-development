@@ -48,3 +48,6 @@ if (packagerHost && packagerHost !== 'localhost' && typeof globalThis.fetch === 
     },
   });
 }
+
+// Para os testes (tests/metro-loopback.test.js); o --require ignora o que o módulo exporta
+module.exports = { toLoopback, wrap };

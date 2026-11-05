@@ -182,6 +182,15 @@ async function streamLogs(service, range, req, res) {
   });
 }
 
+// since (unix, segundos): reconexao, traz tudo desde entao; senao as ultimas "tail" linhas, entre 1 e 5000.
+// tail invalido, zero ou negativo vira o padrao: o Docker trataria um negativo como "o log inteiro"
+function logRange(searchParams) {
+  const since = Number(searchParams.get('since'));
+  if (since > 0) return `since=${Math.floor(since)}&tail=all`;
+  const tail = Math.floor(Number(searchParams.get('tail')));
+  return `tail=${tail >= 1 ? Math.min(tail, 5000) : 300}`;
+}
+
 // --- HTTP -------------------------------------------------------------------
 
 function sendJson(res, status, body) {
@@ -189,9 +198,17 @@ function sendJson(res, status, body) {
   res.end(JSON.stringify(body));
 }
 
+// Arquivo dentro de public/, ou null se o caminho sair dela. Compara pelo caminho relativo: um startsWith no
+// prefixo aceitaria uma pasta irmã com o mesmo começo (ex.: public-x/)
+function resolvePublicFile(pathname) {
+  const file = path.join(PUBLIC_DIR, pathname === '/' ? 'index.html' : pathname);
+  const relative = path.relative(PUBLIC_DIR, file);
+  return relative && !relative.startsWith('..') && !path.isAbsolute(relative) ? file : null;
+}
+
 function serveStatic(pathname, res) {
-  const file = path.normalize(path.join(PUBLIC_DIR, pathname === '/' ? 'index.html' : pathname));
-  if (!file.startsWith(PUBLIC_DIR)) return sendJson(res, 404, { error: 'Not found' });
+  const file = resolvePublicFile(pathname);
+  if (!file) return sendJson(res, 404, { error: 'Not found' });
   fs.readFile(file, (err, content) => {
     if (err) return sendJson(res, 404, { error: 'Not found' });
     res.writeHead(200, {
@@ -223,11 +240,7 @@ const server = http.createServer(async (req, res) => {
 
     const logsMatch = url.pathname.match(/^\/api\/services\/([\w.-]+)\/logs$/);
     if (req.method === 'GET' && logsMatch) {
-      // since (unix, segundos): reconexao, traz tudo desde entao; senao as ultimas "tail" linhas
-      const since = Number(url.searchParams.get('since'));
-      const tail = Math.min(Number(url.searchParams.get('tail')) || 300, 5000);
-      const range = since > 0 ? `since=${Math.floor(since)}&tail=all` : `tail=${tail}`;
-      return await streamLogs(logsMatch[1], range, req, res);
+      return await streamLogs(logsMatch[1], logRange(url.searchParams), req, res);
     }
 
     const actionMatch = url.pathname.match(/^\/api\/services\/([\w.-]+)\/(\w+)$/);
@@ -253,11 +266,24 @@ const server = http.createServer(async (req, res) => {
   }
 });
 
-server.listen(PORT, () => console.log(`[devhub] central de desenvolvimento em http://localhost:${PORT}`));
+// Só abre a porta quando executado (node server.js); os testes importam as funções sem subir o servidor
+if (require.main === module) {
+  server.listen(PORT, () => console.log(`[devhub] central de desenvolvimento em http://localhost:${PORT}`));
 
-for (const signal of ['SIGINT', 'SIGTERM']) {
-  process.on(signal, () => {
-    server.closeAllConnections();
-    server.close(() => process.exit(0));
-  });
+  for (const signal of ['SIGINT', 'SIGTERM']) {
+    process.on(signal, () => {
+      server.closeAllConnections();
+      server.close(() => process.exit(0));
+    });
+  }
 }
+
+module.exports = {
+  server,
+  isAllowed,
+  logRange,
+  resolvePublicFile,
+  toService,
+  createDemuxer,
+  createLineSplitter,
+};
