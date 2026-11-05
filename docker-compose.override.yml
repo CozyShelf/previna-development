@@ -68,13 +68,18 @@ services:
     volumes:
       - ../previna-frontend-mobile:/app
       - /app/node_modules
+      - ./config/mobile/metro-loopback.cjs:/opt/previna/metro-loopback.cjs:ro
     ports:
       - "8081:8081"
     environment:
+      # Evita que o Expo CLI caia ao abrir o JS debugger (ver config/mobile/metro-loopback.cjs)
+      - NODE_OPTIONS=--require /opt/previna/metro-loopback.cjs
       - REACT_NATIVE_PACKAGER_HOSTNAME=${MOBILE_HOST:-localhost}
       - EXPO_PUBLIC_API_URL=${MOBILE_API_URL:-http://localhost/backend}
     stdin_open: true
     tty: true
+    # Rede de segurança: se o Metro cair por qualquer motivo, volta sozinho
+    restart: unless-stopped
     depends_on:
       - nginx
     networks:

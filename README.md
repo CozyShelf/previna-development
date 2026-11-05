@@ -130,6 +130,13 @@ npm run logs:dev:mobile   # logs do Metro (QR code aparece aqui e na central)
 
 Atalhos do Expo (ex: `r` para reload): `docker attach previna-development-mobile-1` (sair com `Ctrl+P Ctrl+Q`).
 
+> O Expo só aceita conexões de debug vindas de loopback, e o Metro consulta a si mesmo pelo IP da LAN
+> (`MOBILE_HOST`), que dentro do container passa pelo NAT. Sem ajuste, abrir o JS debugger derrubava o Metro
+> (`Unexpected token '<', "<!DOCTYPE "... is not valid JSON`). O `config/mobile/metro-loopback.cjs`
+> (carregado via `NODE_OPTIONS`) redireciona essas consultas internas para `127.0.0.1` e evita a queda.
+> Mesmo assim, o DevTools aberto pelo navegador do host continua sem conectar, pelo mesmo motivo. Para
+> depurar com breakpoints, rode `npx expo start` direto na máquina, fora do Docker.
+
 > Ao mudar dependências do mobile, rebuild a imagem e renove o volume de `node_modules`:
 > `docker compose --profile mobile up -d --build --renew-anon-volumes mobile`
 
