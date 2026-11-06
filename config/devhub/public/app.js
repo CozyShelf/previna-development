@@ -61,7 +61,10 @@ const storage = {
 };
 
 const fill = (template) =>
-  template.replaceAll('{host}', location.hostname).replaceAll('{mobileHost}', vars.mobileHost ?? location.hostname);
+  template
+    .replaceAll('{host}', location.hostname)
+    .replaceAll('{webPort}', vars.webPort ?? '')
+    .replaceAll('{mobileHost}', vars.mobileHost ?? location.hostname);
 
 function tone(service) {
   if (service.state === 'running') {

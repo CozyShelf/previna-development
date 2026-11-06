@@ -24,7 +24,7 @@ Frontend e Backend ficam na rede interna `previna-network` e se comunicam pela m
 Cliente
   │
   ▼
-Nginx (porta 80/443)
+Nginx (dev: porta 80, ou NGINX_PORT; prod: 80 e 443)
   ├── /          → frontend
   └── /backend/  → backend:8080
 ```
@@ -43,26 +43,30 @@ Nginx (porta 80/443)
 
 ```bash
 previna-development/
-├── docker-compose.yml              # Base (serviços + rede + nginx)
+├── docker-compose.yml              # Base (serviços + rede + nginx, sem portas: cada ambiente publica as suas)
 ├── docker-compose.override.yml     # Desenvolvimento (hot reload)
 ├── docker-compose.prod.yml         # Produção (imagens + HTTPS)
-└── config/
-    ├── nginx/
-    │   ├── nginx.conf              # Reverse proxy (dev)
-    │   └── nginx.prod.conf         # Reverse proxy (prod)
-    ├── backend/
-    │   ├── Dockerfile.dev          # mvn spring-boot:run
-    │   └── Dockerfile              # Multi-stage → JRE 21 alpine
-    ├── frontend/
-    │   ├── Dockerfile.dev          # npm run dev
-    │   ├── Dockerfile              # Multi-stage → nginx + dist/
-    │   └── nginx.conf              # Config interna do container de frontend (SPA)
-    ├── mobile/
-    │   └── Dockerfile.dev          # npx expo start (Metro)
-    └── devhub/                     # Central de desenvolvimento (só dev)
-        ├── server.js               # Node sem dependências, fala com a API do Docker
-        ├── services.json           # Título, descrição e links de cada serviço
-        └── public/                 # Página (HTML/CSS/JS puro)
+├── config/
+│   ├── nginx/
+│   │   ├── nginx.conf              # Reverse proxy (dev)
+│   │   └── nginx.prod.conf         # Reverse proxy (prod)
+│   ├── backend/
+│   │   ├── Dockerfile.dev          # mvn spring-boot:run
+│   │   └── Dockerfile              # Multi-stage → JRE 21 alpine
+│   ├── frontend/
+│   │   ├── Dockerfile.dev          # npm run dev
+│   │   ├── Dockerfile              # Multi-stage → nginx + dist/
+│   │   └── nginx.conf              # Config interna do container de frontend (SPA)
+│   ├── mobile/
+│   │   ├── Dockerfile.dev          # npx expo start (Metro)
+│   │   └── metro-loopback.cjs      # Evita a queda do Metro ao abrir o JS debugger
+│   └── devhub/                     # Central de desenvolvimento (só dev)
+│       ├── server.js               # Node sem dependências, fala com a API do Docker
+│       ├── services.json           # Título, descrição e links de cada serviço
+│       └── public/                 # Página (HTML/CSS/JS puro)
+├── tests/                          # Testes (node:test) da central e do metro-loopback
+├── scripts/conferir-portas.js      # Confere as portas que o nginx publica (usado na CI)
+└── .github/workflows/ci.yml        # Pipeline de CI
 ```
 
 ---
@@ -90,6 +94,9 @@ O arquivo `docker-compose.override.yml` é carregado automaticamente e configura
 - Frontend → [http://localhost](http://localhost)
 - Backend  → [http://localhost/backend/](http://localhost/backend/)
 - E-mails (MailHog) → [http://localhost:8025](http://localhost:8025): e-mails enviados pelo backend, como o pré-login das empresas parceiras
+
+> Porta 80 já em uso na máquina? Defina `NGINX_PORT` no `.env` (ex.: `8080`) e ajuste junto `PORTAL_URL` e
+> `MOBILE_API_URL`, como no `.env.example`. Os links da central de desenvolvimento acompanham a porta.
 
 ### Central de desenvolvimento
 
@@ -130,6 +137,13 @@ npm run logs:dev:mobile   # logs do Metro (QR code aparece aqui e na central)
 
 Atalhos do Expo (ex: `r` para reload): `docker attach previna-development-mobile-1` (sair com `Ctrl+P Ctrl+Q`).
 
+> O Expo só aceita conexões de debug vindas de loopback, e o Metro consulta a si mesmo pelo IP da LAN
+> (`MOBILE_HOST`), que dentro do container passa pelo NAT. Sem ajuste, abrir o JS debugger derrubava o Metro
+> (`Unexpected token '<', "<!DOCTYPE "... is not valid JSON`). O `config/mobile/metro-loopback.cjs`
+> (carregado via `NODE_OPTIONS`) redireciona essas consultas internas para `127.0.0.1` e evita a queda.
+> Mesmo assim, o DevTools aberto pelo navegador do host continua sem conectar, pelo mesmo motivo. Para
+> depurar com breakpoints, rode `npx expo start` direto na máquina, fora do Docker.
+
 > Ao mudar dependências do mobile, rebuild a imagem e renove o volume de `node_modules`:
 > `docker compose --profile mobile up -d --build --renew-anon-volumes mobile`
 
@@ -148,6 +162,7 @@ O que o `docker-compose.prod.yml` faz:
 - Usa imagens prontas do registry (sem volumes de código)
 - Ativa o profile Spring `prod`
 - Define `restart: unless-stopped`
+- Publica as portas 80 (desafio do Let's Encrypt e redirecionamento para HTTPS) e 443
 - Usa o `nginx.prod.conf` (HTTPS, HTTP/2, gzip e headers de segurança)
 - Não inclui o app mobile: o app é distribuído pelas lojas (EAS Build) e só consome a API em `https://<domínio>/backend`
 
@@ -205,3 +220,29 @@ docker build \
 
 > `VITE_API_URL` é resolvida em tempo de **build** pelo Vite.  
 > Como a API é servida na mesma origem (`/backend`), o mesmo valor serve para todos os ambientes.
+
+---
+
+## Testes
+
+```bash
+npm test   # node --test, sem dependências (Node 22)
+```
+
+- `tests/devhub.test.js`: a central controla o Docker da máquina, então os testes provam que só o navegador da
+  própria máquina a usa (Host fora de localhost e ações sem `Origin` da central dão 403), que ela não serve
+  arquivos fora de `public/`, não executa ações fora de start/stop/restart nem para a si mesma, e transmite os
+  logs. Um Docker falso num socket temporário responde no lugar do de verdade.
+- `tests/devhub-sem-docker.test.js`: sem acesso ao socket, a página explica o motivo.
+- `tests/metro-loopback.test.js`: só as requisições do container ao próprio Metro vão para `127.0.0.1`.
+
+## CI
+
+`.github/workflows/ci.yml` roda em todo PR e em todo push na `main`:
+
+- **Testes:** `node --check` nos scripts e `npm test`.
+- **Compose e nginx:** valida o Compose de desenvolvimento e o de produção e confere as portas que o nginx publica
+  em cada um (`scripts/conferir-portas.js`: 80 em dev; 80 e 443 em produção). O Compose soma as portas de todos os
+  arquivos, então uma porta posta no `docker-compose.yml` base vazaria para a produção. Também roda `nginx -t` nas
+  duas configurações do nginx.
+

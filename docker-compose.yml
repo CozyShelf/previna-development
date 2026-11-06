@@ -11,8 +11,8 @@ services:
 
   nginx:
     image: nginx:1.27-alpine
-    ports:
-      - "80:80"
+    # Sem ports aqui: o Compose soma as listas de portas dos arquivos, então cada ambiente publica as suas
+    # (dev: 80, ou NGINX_PORT do .env, no override; prod: 80 e 443 no docker-compose.prod.yml)
     depends_on:
       - backend
       - frontend

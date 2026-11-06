@@ -1,0 +1,85 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# Um push novo no mesmo PR cancela a execução anterior
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  testes:
+    name: Testes (devhub e Metro)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      # Mesma versão da imagem da central de desenvolvimento (node:22-alpine)
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Sintaxe
+        run: node --check config/devhub/server.js && node --check config/devhub/public/app.js && node --check config/mobile/metro-loopback.cjs
+
+      # node:test, sem dependências: não há npm ci
+      - name: Testes
+        run: npm test
+
+  configuracao:
+    name: Compose e nginx
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    # Valores fictícios só para o Compose montar a configuração de produção (os :? exigem todos)
+    env:
+      DB_URL: jdbc:postgresql://db:5432/previna
+      DB_USER: previna
+      DB_PASSWORD: ci
+      JWT_SECRET: ci
+      MAIL_HOST: smtp
+      MAIL_PORT: '587'
+      MAIL_USER: ci
+      MAIL_PASSWORD: ci
+      MAIL_FROM: ci
+      PORTAL_URL: https://exemplo.com.br
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Compose de desenvolvimento
+        run: |
+          docker compose config -q
+          docker compose config --format json | node scripts/conferir-portas.js 80
+
+      - name: Compose de produção
+        run: |
+          docker compose -f docker-compose.yml -f docker-compose.prod.yml config -q
+          docker compose -f docker-compose.yml -f docker-compose.prod.yml config --format json | node scripts/conferir-portas.js 80 443
+
+      # backend e frontend só existem na rede do Compose: o --add-host faz o nginx -t resolver os upstreams
+      - name: nginx de desenvolvimento
+        run: |
+          docker run --rm --add-host backend:127.0.0.1 --add-host frontend:127.0.0.1 \
+            -v "$PWD/config/nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro" \
+            nginx:1.27-alpine nginx -t
+
+      # Certificado autoassinado no caminho do Let's Encrypt, só para o nginx -t carregar o bloco HTTPS
+      - name: nginx de produção
+        run: |
+          mkdir -p certs/live/seu-dominio.com.br
+          openssl req -x509 -nodes -newkey rsa:2048 -days 1 -subj /CN=ci \
+            -keyout certs/live/seu-dominio.com.br/privkey.pem -out certs/live/seu-dominio.com.br/fullchain.pem
+          docker run --rm --add-host backend:127.0.0.1 --add-host frontend:127.0.0.1 \
+            -v "$PWD/config/nginx/nginx.prod.conf:/etc/nginx/conf.d/default.conf:ro" \
+            -v "$PWD/certs:/etc/letsencrypt:ro" \
+            nginx:1.27-alpine nginx -t
